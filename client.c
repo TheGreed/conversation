@@ -40,7 +40,8 @@ int main(int agrc, char *argv[]){
 		exit(1);
 	}
 
-	if(send(sock, argv[2], sizeof(argv[2]), 0) < 0){
+	int g = send(sock, argv[2], sizeof(*argv[2]) * strlen(argv[2]), 0);
+	if(g < 0){
 		perror("Send Failed");
 		close(sock);
 		exit(1);
