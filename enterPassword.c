@@ -64,7 +64,7 @@ int main(int argc, const char *argv[]){
 	/* on success we may encrypt password */
 	if(!readArg(argc, argv)){
 		
-		/* crypt is needs headers unistd.h and crypt.h */ 
+		/* crypt needs headers unistd.h and crypt.h */ 
 		/* the first number between the dolar signs is the encryption type: */ 
 		/* 6 is SHA-512 and the next string between dolar signs is the salt */
 		encpass = crypt(password, "$6$a9$");
