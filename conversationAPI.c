@@ -1,4 +1,4 @@
-#include "conversationMySQLAPI.h"
+#include "conversationAPI.h"
 
 MYSQL *converInit(){
 	MYSQL *conn = mysql_init(NULL);
