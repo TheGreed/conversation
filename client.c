@@ -8,6 +8,8 @@
 #include <unistd.h>
 
 #define DATA "Hello There"
+#define true 1
+#define BUFFER_SIZE 1024
 
 int main(int agrc, char *argv[]){
 	int sock;
@@ -17,7 +19,7 @@ int main(int agrc, char *argv[]){
 
 	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if(sock < 0){
-		perror("Socket Failed");
+		perror("Socket Failed\n");
 		exit(1);
 	}
 
@@ -27,7 +29,7 @@ int main(int agrc, char *argv[]){
 	
 	hp = gethostbyname(argv[1]);
 	if(hp == 0){
-		perror("gethostbyname failed");
+		perror("gethostbyname failed\n");
 		close(sock);
 		exit(1);
 	}
@@ -35,19 +37,27 @@ int main(int agrc, char *argv[]){
 	server.sin_port = htons(5000);
 
 	if(connect(sock, (struct sockaddr *) &server, sizeof(server)) < 0){
-		perror("Connection Failed");
+		perror("Connection Failed\n");
 		close(sock);
 		exit(1);
 	}
 
-	int g = send(sock, argv[2], sizeof(*argv[2]) * strlen(argv[2]), 0);
-	if(g < 0){
-		perror("Send Failed");
-		close(sock);
-		exit(1);
+	int read_size;
+	char *message = malloc(BUFFER_SIZE);
+	char server_message[BUFFER_SIZE];
+
+	while(true)
+	{
+		printf("Sending to server...\n");
+		message = "Hello server, my name is client.\n";
+		write(sock , message , strlen(message));
+		if(recv(sock , server_message , BUFFER_SIZE , 0) > 0 )
+		{
+			printf("Recieved from server: %s\n", server_message);
+		}
+		sleep(1);
 	}
 
-	printf("Sent: %s\n", argv[2]);
 	close(sock);
 	return EXIT_SUCCESS;
 }
