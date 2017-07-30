@@ -43,16 +43,20 @@ int main(int agrc, char *argv[]){
 	}
 
 	int read_size;
-	char *message = malloc(BUFFER_SIZE);
+	char message[BUFFER_SIZE];
 	char server_message[BUFFER_SIZE];
+
+	memset(message, 0, BUFFER_SIZE);
+	memset(server_message, 0, BUFFER_SIZE);
 
 	while(true)
 	{
 		printf("Sending to server...\n");
-		message = "Hello server, my name is client.\n";
+		strcpy(message, "Hello server, my name is client.");
 		write(sock , message , strlen(message));
 		if(recv(sock , server_message , BUFFER_SIZE , 0) > 0 )
 		{
+			fflush(stdout);
 			printf("Recieved from server: %s\n", server_message);
 		}
 		sleep(1);

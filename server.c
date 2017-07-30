@@ -78,13 +78,17 @@ void *connection_handler(void *socket_desc)
     int sock = *(int*)socket_desc;
     int read_size;
     char client_message[2000];
+		memset(client_message, 0, 2000);
      
     //Receive a message from client
     while( (read_size = recv(sock , client_message , 2000 , 0)) > 0 )
     {
-		printf("Recived from client: %s\n", client_message);
-        //Send the message back to client
-        write(sock , client_message , strlen(client_message));
+			fflush(stdout);
+			printf("Recived from client: %s\n", client_message);
+			fflush(stdout);
+			printf("Sending to client: %s\n", client_message);
+			//Send the message back to client
+			write(sock , client_message , strlen(client_message));
     }
      
     if(read_size == 0)
