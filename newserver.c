@@ -31,8 +31,8 @@ void *send_handler(void *b){
 	}	
 }
 
-void *recv_handler(void *sock){
-	int asock = *(int *)sock;
+void recv_handler(int asock){
+	/* int asock = *(int *)sock; */
 	int msglen;
 	char buffer[256];
 	while(1){
@@ -44,6 +44,7 @@ void *recv_handler(void *sock){
 			strcpy(send_buff, buffer);
 			pthread_t send;
 			pthread_create(&send, NULL, *send_handler, (void *)send_buff);
+			pthread_join(send, NULL);
 		}
 	}	
 }
@@ -106,9 +107,10 @@ int main(void){
 		n_clients++;
 		
 		if(fork() > 0){
-			pthread_t recv;
-			pthread_create(&recv, NULL, recv_handler, (void *)&asock);
-			pthread_join(recv, NULL);
+			recv_handler(asock);
+			/* pthread_t recv; */
+			/* pthread_create(&recv, NULL, recv_handler, (void *)&asock); */
+			/* pthread_join(recv, NULL); */
 			/* int shmid; */
 			/* key_t key = ; */
 			/* char *shm; */
