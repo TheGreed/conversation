@@ -45,10 +45,29 @@ int main(int argc, char *argv[]){
 		exit(1);
 	}
 
-		bzero(buffer, 256);
-		strcpy(buffer, "This is client.\n");
+	if(fork > 0){
+		while(1){
+			bzero(buffer, 256);
+			strcpy(buffer, "This is client.\n");
+			send(sock, buffer, 255, 0);
+			sleep(1);
+		}
+	}else if(fork < 0){
+		perror("Fork Failed: ");
+		close(sock);
+		exit(1);
+	}
+	
 	while(1){
-		send(sock, buffer, 255, 0);
+		msglen = recv(sock, buffer, 255, 0);
+		if(msglen < 0){
+			perror("Recieved Failed: ");
+			close(sock);
+			exit(1);
+		}
+
+		printf("Buffer: %s", buffer);
+	}
 
 /* 		bzero(buffer, 256); */
 /* 		if((msglen = recv(sock, buffer, 256, 0)) < 0){ */
@@ -61,7 +80,6 @@ int main(int argc, char *argv[]){
 /* 		printf("msglen: %d\n", msglen); */
 
 		sleep(1);
-	}
 
 	close(sock);
 	return 0;

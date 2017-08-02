@@ -22,6 +22,7 @@ void send_handler(char *buffer){
 	int *p = NULL;
 	while((p = (all_clients + i * sizeof(int))) && *p > 0){
 		send(*p, buffer, strlen(buffer), 0);
+		printf("Sent message to client at asock: %d\n", *p);
 		++i;
 	}	
 }
