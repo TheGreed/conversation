@@ -45,19 +45,14 @@ int main(int argc, char *argv[]){
 		exit(1);
 	}
 
-	if(fork > 0){
+	if(fork() > 0){
 		while(1){
 			bzero(buffer, 256);
 			strcpy(buffer, "This is client.\n");
 			send(sock, buffer, 255, 0);
 			sleep(1);
 		}
-	}else if(fork < 0){
-		perror("Fork Failed: ");
-		close(sock);
-		exit(1);
-	}
-	
+	}	
 	while(1){
 		msglen = recv(sock, buffer, 255, 0);
 		if(msglen < 0){
