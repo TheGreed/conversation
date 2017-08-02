@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <pthread.h>
 
 #define MAX_CLIENTS 10
 
@@ -27,7 +28,8 @@ void send_handler(char *buffer){
 	}	
 }
 
-void recv_handler(int asock){
+void *recv_handler(void *sock){
+	int asock = *(int *)sock;
 	int msglen;
 	char buffer[256];
 	while(1){
@@ -52,8 +54,9 @@ int main(void){
 	int port = 6000;
 
 	n_clients = 0;
-	key = 5963;
+	key = 7890;
 	shm_size = (MAX_CLIENTS + 1) * sizeof(int);
+	/* printf("shm_size: %d\n", shm_size); */
 
 	if((shmid = shmget(key, shm_size, IPC_CREAT | 0666)) < 0){
 		perror("Shmget Failed: ");
@@ -96,7 +99,10 @@ int main(void){
 		*(all_clients + n_clients * sizeof(int)) = asock;
 		n_clients++;
 		
-		if(fork() != 0){
+		if(fork() > 0){
+			pthread_t recv;
+			pthread_create(&recv, NULL, recv_handler, (void *)&asock);
+			pthread_join(recv, NULL);
 			/* int shmid; */
 			/* key_t key = ; */
 			/* char *shm; */
