@@ -18,13 +18,14 @@ int shmid;
 int shm_size;
 char *shm;
 
-void send_handler(char *buffer){
+void *send_handler(void *b){
+	char *buffer = (char *)b;	
 	int i = 0;
 	int *p = NULL;
 	while((p = (all_clients + i * sizeof(int))) && *p > 0){
 		send(*p, buffer, strlen(buffer), 0);
-		/* printf("Buffer on server: %s", buffer); */
-		/* printf("Buffer Length: %ld\n", strlen(buffer)); */
+		printf("Buffer on server: %s", buffer);
+		printf("Buffer Length: %ld\n", strlen(buffer));
 		printf("Sent message to client at asock: %d\n", *p);
 		++i;
 	}	
@@ -39,7 +40,10 @@ void *recv_handler(void *sock){
 		msglen = recv(asock, buffer, 255, MSG_DONTWAIT);
 		if(msglen > 0){
 			printf("Message Received: %s", buffer);
-			send_handler(buffer);
+			char send_buff[256];
+			strcpy(send_buff, buffer);
+			pthread_t send;
+			pthread_create(&send, NULL, *send_handler, (void *)send_buff);
 		}
 	}	
 }
