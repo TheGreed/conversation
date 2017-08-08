@@ -100,7 +100,7 @@ int main(void){
 	if(bind(sock, (struct sockaddr *)&server, sizeof(server)) < 0)
 		error("Bind Failed: ");
 	
-	if(listen(sock, 5) < 0)
+	if(listen(sock, 100) < 0)
 		error("Listen Failed: ");
 
 	client_len = sizeof(client);
