@@ -22,12 +22,15 @@ WINDOW *user_input;
 WINDOW *chat_log;
 
 NCURSES_WINDOW_CB chat_handler(){
-	/* int sock = *(int *)s; */
 	int sock = *shm_sock;
 	char *chat_buff = malloc(256 * sizeof(char));
 	int msglen;
 
-	mvwprintw(chat_log, 10, 10, "Hello World");
+	scrollok(chat_log, 1);
+	/* mvwprintw(chat_log, 10, 10, "Hello World"); */
+	/* wrefresh(chat_log); */
+	mvwprintw(chat_log, 0, 0, "%d", LINES);
+	mvwprintw(chat_log, 0, 10, "Hello");
 	wrefresh(chat_log);
 
 	while(1){
@@ -42,8 +45,8 @@ NCURSES_WINDOW_CB chat_handler(){
 			exit(1);
 		}
 
-		/* scroll(chat_log); */
-		mvwprintw(chat_log, 10, 0, chat_buff);
+		scroll(chat_log);
+		mvwprintw(chat_log, 20, 0, chat_buff);
 		wrefresh(chat_log);
 	}
 }
@@ -63,8 +66,8 @@ NCURSES_WINDOW_CB input(){
 	while(1){
 		bzero(buffer, 256);
 		wgetstr(user_input, buffer);	
-		mvwprintw(chat_log, 1, 1, buffer);
-		wrefresh(chat_log);
+		/* mvwprintw(chat_log, 1, 1, buffer); */
+		/* wrefresh(chat_log); */
 		msglen = send(sock, buffer, 255, 0);
 		if(msglen < 0){
 			perror("Send Failed: ");
@@ -82,6 +85,10 @@ NCURSES_WINDOW_CB input(){
 
 void error(char *msg){
 	perror(msg);
+	close(sock);
+	delwin(chat_log);
+	delwin(user_input);
+	endwin();
 	exit(1);
 }
 
@@ -93,15 +100,14 @@ int main(int argc, char *argv[]){
 	int port = 6000;
 	int msglen;
 
-	initscr();
-	chat_log = newwin(0, 0, 0, 0);
+	chat_log = initscr();
+	/* chat_log = newwin(0, 0, 0, 0); */
 	user_input = newwin(1, 0, LINES - 1, 0);
 	wresize(chat_log, LINES - 2, COLS);
 	curs_set(0);
-	scrollok(chat_log, 1);
 
 	key = 8090;
-	shm_size = 2 * sizeof(int);
+	shm_size = sizeof(int);
 
 	if((shmid = shmget(key, shm_size, IPC_CREAT | 0666)) < 0){
 		perror("Shmget Failed: ");
@@ -114,7 +120,7 @@ int main(int argc, char *argv[]){
 	}
 
 	shm_sock = (int *)shm;
-	bzero(shm_sock, 2 * sizeof(int));
+	bzero(shm_sock, sizeof(int));
 
 	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if(sock < 0)
@@ -140,15 +146,60 @@ int main(int argc, char *argv[]){
 
 	*shm_sock = sock;
 
-	mvwprintw(chat_log, 4, 4, "sock: %d", *shm_sock);
-	wrefresh(chat_log);
+	char *chat_buff = malloc(256 * sizeof(char));
+	char c;
+	unsigned int buff_count = 0;
+	nodelay(user_input, 1);
+	scrollok(chat_log, 1);
+	bzero(buffer, 256 * sizeof(char));
+	bzero(chat_buff, 256 * sizeof(char));
+
+	while(1){
+		msglen = 0;
+		msglen = recv(sock, chat_buff, 255, MSG_DONTWAIT);
+		if(msglen > 0){
+			scroll(chat_log);
+			mvwprintw(chat_log, 10, 0, chat_buff);
+			wrefresh(chat_log);
+			bzero(chat_buff, 256 * sizeof(char));
+		}
+
+		c = wgetch(user_input);
+		if(c == ERR)
+			continue;
+		else if(c != '\n'){
+			buffer[buff_count++] = c;
+		}else{
+			/* mvwprintw(chat_log, 0, 0, buffer); */
+			msglen = send(sock, buffer, 255, 0);
+			if(msglen < 0)
+				error("Send Failed: ");
+			buff_count = 0;
+			bzero(buffer, 256 * sizeof(char));
+			wclear(user_input);
+		}
+	}
+
+	/* mvwprintw(chat_log, 4, 4, "sock: %d", *shm_sock); */
+	/* wrefresh(chat_log); */
 
 	/* int *sock_ptr = &sock; */
 	/* mvwprintw(chat_log, 4, 4, "sock: %d", *sock_ptr); */
 	/* wrefresh(chat_log); */
 
-	use_window(user_input, (NCURSES_WINDOW_CB)input, NULL);
-	use_window(chat_log, (NCURSES_WINDOW_CB)chat_handler, NULL);
+	/* use_window(chat_log, (NCURSES_WINDOW_CB)chat_handler, NULL); */
+	/* use_window(user_input, (NCURSES_WINDOW_CB)input, NULL); */
+	/* chat_handler(); */
+	/* mvwprintw(chat_log, 0, 0, "Hello World"); */
+	/* if(use_window(chat_log, (NCURSES_WINDOW_CB)chat_handler, NULL)){ */
+	/* 	perror("Chat_log Failed: "); */
+	/* 	close(sock); */
+	/* 	delwin(user_input); */
+	/* 	delwin(chat_log); */
+	/* 	endwin(); */
+	/* 	shmdt(shm); */
+	/* 	exit(1); */
+	/* } */
 
 	/* while(1){ */
 		
@@ -200,6 +251,7 @@ int main(int argc, char *argv[]){
 
 		/* sleep(1); */
 
+	free(chat_buff);
 	shmdt(shm);
 	delwin(chat_log);
 	delwin(user_input);

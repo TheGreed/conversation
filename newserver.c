@@ -29,7 +29,7 @@ void send_handler(char *buffer){
 	int *p = NULL;
 	while((p = (all_clients + i * sizeof(int))) && *p > 0){
 		send(*p, buffer, strlen(buffer), 0);
-		printf("Buffer on server: %s", buffer);
+		printf("Buffer on server: %s\n", buffer);
 		printf("Buffer Length: %ld\n", strlen(buffer));
 		printf("Sent message to client at asock: %d\n", *p);
 		++i;
@@ -44,7 +44,7 @@ void recv_handler(int asock){
 		bzero(buffer, 256);
 		msglen = recv(asock, buffer, 255, MSG_DONTWAIT);
 		if(msglen > 0){
-			printf("Message Received: %s", buffer);
+			printf("Message Received: %s\n", buffer);
 			/* char send_buff[256]; */
 			/* strcpy(send_buff, buffer); */
 			send_handler(buffer);
